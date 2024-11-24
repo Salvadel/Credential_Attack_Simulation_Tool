@@ -132,17 +132,29 @@ int main(void){
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789"
         "!@#$*_";
+<<<<<<< HEAD
         int alphabetsize = sizeof(alphabet) - 1, listAttempts = 0, size = 0, cracked = 0, uncracked = 0, bfContinue = 0, crackedCounter = 0, toolong = 0, validPassword = 0;
+=======
+        int alphabetsize = sizeof(alphabet) - 1, listAttempts = 0, size = 0, cracked = 0, uncracked = 0, bfContinue = 0, crackedCounter = 0, toolong = 0;
+>>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
         double timeTaken, totalTime = 0;
         long long passwordCapture = 0, preBrute = 0, postBrute = 0;
         time_t start, end;
 
+<<<<<<< HEAD
+=======
+        struct PasswordInfo password[size]; //Call structure 'PasswordInfo' to main function and create subset 'password'
+
+>>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
         //Ask user for how many passwords the system will crack
         printf("\nEnter how many passwords you would like to crack: ");
         scanf("%d", &size);
 
+<<<<<<< HEAD
         struct PasswordInfo password[size]; //Call structure 'PasswordInfo' to main function and create subset 'password'
 
+=======
+>>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
         //Validate data entry and ensure the user cannot enter string values
         while(size <= 0 || size > 100){
             while(getchar() != '\n');
@@ -151,6 +163,7 @@ int main(void){
         }
 
         //Ask user for passwords and initialize structure data for the structure array
+<<<<<<< HEAD
 
 
         for (int i = 0; i < size; i++){
@@ -177,6 +190,20 @@ int main(void){
             }
         }
         
+=======
+        for (int i = 0; i < size; i++){
+            printf("\nEnter password %d to crack: ", i + 1);
+            scanf("%s", password[i].pass);
+            password[i].attempts = 0;
+            password[i].timeTaken = 0;
+            password[i].cracked = 0;
+            //If a character is entered not in the BFM directory and the listalgorithm cannot crack it ask user to re-input password
+            if (strpbrk(password[i].pass, alphabet) != NULL){
+                printf("\nA character you entered is not allowed, please re-enter your password: ");
+                scanf("%s", password[i].pass);
+            }
+        }
+>>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
 
         //CREATE THE LIST SEARCHED ALGORITHM
         FILE* file; //Set pointer to file
@@ -201,6 +228,7 @@ int main(void){
                 printf("\n%s was unable to be cracked!", password[i].pass);
 
                 for (int j = 0; j < (sizeof(alphabet) - 1); j++){
+<<<<<<< HEAD
                     if (strlen(password[i].pass) > 8){ 
                         printf("\nSorry your password is too long for the brute force machine it would take a VERY long time to crack\n");
                         toolong = 1; //Flag to tell the program the password is too long
@@ -210,6 +238,21 @@ int main(void){
                 if (!toolong){
                     bfContinue = 1; //Assign flag to uncracked passwords
                 }
+=======
+                    if (password[i].pass[9] == '\0' || password[i].pass[9] == alphabet[j]){ //If the 9th position is NULL or any possible character end exit both loops
+                        printf("\nSorry your password is too long for the brute force machine it would take a VERY long time to crack\n");
+                        toolong = 1; //Flag to tell the program the password is too long
+                        goto end; //Skip 'bfContinue' flag if it is bigger then 8 characters
+                    }
+                }
+
+                bfContinue = 1; //Assign flag to uncracked passwords
+
+                end:
+                    if (toolong){
+                        continue; //Skip password if it is too long
+                    }
+>>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
             }
 
             //Display if all passwords have been cracked
