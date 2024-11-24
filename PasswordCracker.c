@@ -19,21 +19,26 @@ char guess[20];
 long long attempts;
 double timeTaken;
 int cracked;
+int toolong;
 };
 
-double calculateTime(time_t start, time_t end, double* totalTime){ //Function to calculate the time that has passed for each password 
+double calculateTime(time_t start, time_t end, double* totalTimePtr){ //Function to calculate the time that has passed for each password 
     double temp = ((double) (end - start)) / CLOCKS_PER_SEC; //Calculate time in seconds
-    *totalTime += temp;
+    *totalTimePtr += temp;
     return temp;
 }
 
-void generatePasswords(char* alphabet, int alphabetsize, struct PasswordInfo* password, int index, int length){ //Function to generate the passwords using a recursive loop
+void generatePasswords(char* alphabetPtr, int alphabetsize, struct PasswordInfo* password, int index, int length){ //Function to generate the passwords using a recursive loop
     if (index == length){
         password->guess[length] = '\0'; //Terminate the string
-
         password->attempts++; //Increase attempts after each loop
 
-        //If guess and password are same marked a scracked
+        //Print every 1000000 attempts to let the user know the BFM is working (useful on hard to crack passwords)
+        if (password->attempts % 10000000000 == 0) {
+            printf("Attempts so far: %lld, Current guess: %s\n", password->attempts, password->guess);
+        }
+
+        //If guess and password are same marked as cracked
         if (strcmp(password->guess, password->pass) == 0){
             password->cracked = 1;
         }
@@ -41,9 +46,9 @@ void generatePasswords(char* alphabet, int alphabetsize, struct PasswordInfo* pa
     }
 
     for (int i = 0; i < alphabetsize; i++){
-        password->guess[index] = alphabet[i];
+        password->guess[index] = alphabetPtr[i];
 
-        generatePasswords(alphabet, alphabetsize, password, index + 1, length); //Start recursive loop
+        generatePasswords(alphabetPtr, alphabetsize, password, index + 1, length); //Start recursive loop
     
         if (password->cracked){
             return; //End function if password is cracked
@@ -51,69 +56,65 @@ void generatePasswords(char* alphabet, int alphabetsize, struct PasswordInfo* pa
     }
 }
 
-void listAlgorithm(struct PasswordInfo* password, int* crackedCounter, int size, int* listAttempts, time_t end, time_t start, FILE* file, double* totalTime){ //Function to search through a file of given passwords for matches and display useful information to the user
+void listAlgorithm(struct PasswordInfo* password, int* crackedCounterPtr, int size, long long* listAttemptsPtr, time_t end, time_t start, FILE* file, double* totalTimePtr, long long* totalAttemptsPtr){ //Function to search through a file of given passwords for matches and display useful information to the user
     char filePassword[20];
 
     while (fgets(filePassword, sizeof(filePassword), file)){
-
     filePassword[strcspn(filePassword, "\n")] = '\0'; //Get rid of the newline character
-
-    (*listAttempts)++; //Tracks Number of passwords searched through
+    (*listAttemptsPtr)++; //Tracks Number of passwords searched through for total
 
     for (int i = 0; i < size; i++){
-        password[i].attempts++; //Count total attempts of each password
+        if (!password[i].cracked){
+            password[i].attempts++;
 
-        if (strcmp(filePassword, password[i].pass) == 0){
-            end = clock(); //Set 'end' to the current program time
+            if (strcmp(filePassword, password[i].pass) == 0){
+                end = clock(); //Set 'end' to the current program time
+                (*crackedCounterPtr)++; //Increase variable to tell how many passwords have been cracked
+                password[i].cracked = 1; //Flag to determine if a password was cracked or not
+                password[i].timeTaken = calculateTime(start, end, totalTimePtr); //Calculate seconds took to complete program
+                *totalAttemptsPtr += password[i].attempts; //Add atempts to total
 
-            (*crackedCounter)++; //Increase variable to tell how many passwords have been cracked
-
-            password[i].cracked = 1; //Flag to determine if a password was cracked or not
-
-            password[i].timeTaken = calculateTime(start, end, totalTime); //Calculate seconds took to complete program
-
-            //Display to user the password cracked and how long it took to compute
-            printf("\nYour Password '%s' was cracked ", password[i].pass);
-            if (password[i].timeTaken < 0.01){
-                printf("instantly!");
-            }
-            else{
-                printf("in %.2lf seconds", password[i].timeTaken);
-            }
-
-            //Display to the user the total number of passwords check for each password
-            printf("\nThe total number of passwords checked was %lld\n", password[i].attempts);
-
-            goto end; //Having a break instread will cause the program to reenter the loop and display times for every single password containing your password Ex: 'A' returns about 20 passwords
+                //Display to user the password cracked and how long it took to compute
+                printf("\nYour Password '%s' was cracked ", password[i].pass);
+                if (password[i].timeTaken < 0.01){
+                    printf("instantly!");
+                }
+                else{
+                    printf("in %.2lf seconds", password[i].timeTaken);
+                }
+                printf("\nIt took the list search %lld attempts to find your password\n", *listAttemptsPtr);
+                break;
+                }
             }
         }
     }
-    end:
-        return;
 } 
 
-void bruteForce(struct PasswordInfo* password, int size, char* alphabet, int alphabetsize, time_t end, time_t start, double* totalTime){ //Function to access the Brute force machine and display results
+void bruteForce(struct PasswordInfo* password, int size, char* alphabetPtr, int alphabetsize, time_t end, time_t start, double* totalTimePtr, long long* totalAttemptsPtr){ //Function to access the Brute force machine and display results
 
     for (int i = 0; i < size; i++){
         if (!password[i].cracked){
             for (int length = 1; length <= 8; length++){ //Set max length for brute force program to check for to 8 to make it reasonable
-                generatePasswords(alphabet, alphabetsize, &password[i], 0, length); //Start brute force machine
+                generatePasswords(alphabetPtr, alphabetsize, &password[i], 0, length); //Start brute force machine
 
                 if (password[i].cracked){
 
                     //Calculate time and total passwords
                     end = clock();
-                    password[i].timeTaken = calculateTime(start, end, totalTime);
+                    password[i].timeTaken = calculateTime(start, end, totalTimePtr);
+                    *totalAttemptsPtr += password[i].attempts;
 
                     //Display results from BFM
                     if (password[i].timeTaken < 0.01){
-                        printf("\n\nYour Password '%s' was cracked instantly", password[i].guess);
+                        printf("\nYour Password '%s' was cracked instantly", password[i].guess);
                     }
                     else{
-                        printf("\n\nYour Password '%s' was cracked in %.2lf seconds", password[i].guess, password[i].timeTaken);
+                        printf("\nYour Password '%s' was cracked in %.2lf seconds", password[i].guess, password[i].timeTaken);
                     }
                     printf("\nIt took the brute force machine %lld attempts to crack %s\n", password[i].attempts, password[i].guess);
-                    break;
+
+                    start = clock(); //restart clock for next password in the loop
+                    break; //Exit loop
                 }
             }
         }
@@ -128,43 +129,24 @@ int main(void){
     
         //Define/Initialize variables used
         char alphabet[] = 
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "0123456789"
-        "!@#$*_";
-<<<<<<< HEAD
-        int alphabetsize = sizeof(alphabet) - 1, listAttempts = 0, size = 0, cracked = 0, uncracked = 0, bfContinue = 0, crackedCounter = 0, toolong = 0, validPassword = 0;
-=======
-        int alphabetsize = sizeof(alphabet) - 1, listAttempts = 0, size = 0, cracked = 0, uncracked = 0, bfContinue = 0, crackedCounter = 0, toolong = 0;
->>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$*_";
+        int alphabetsize = sizeof(alphabet) - 1, size = 0, cracked = 0, uncracked = 0, bfContinue = 0, crackedCounter = 0, toolong = 0, validPassword = 0;
         double timeTaken, totalTime = 0;
-        long long passwordCapture = 0, preBrute = 0, postBrute = 0;
+        long long passwordCapture = 0, preBrute = 0, postBrute = 0, totalAttempts = 0, listAttempts = 0;
         time_t start, end;
 
-<<<<<<< HEAD
-=======
-        struct PasswordInfo password[size]; //Call structure 'PasswordInfo' to main function and create subset 'password'
-
->>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
         //Ask user for how many passwords the system will crack
         printf("\nEnter how many passwords you would like to crack: ");
         scanf("%d", &size);
 
-<<<<<<< HEAD
         struct PasswordInfo password[size]; //Call structure 'PasswordInfo' to main function and create subset 'password'
 
-=======
->>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
         //Validate data entry and ensure the user cannot enter string values
         while(size <= 0 || size > 100){
             while(getchar() != '\n');
             printf("\nPlease enter a size between 1 and 100: ");
             scanf("%d", &size);
         }
-
-        //Ask user for passwords and initialize structure data for the structure array
-<<<<<<< HEAD
-
 
         for (int i = 0; i < size; i++){
              validPassword = 0; //Reset password validation flag
@@ -176,6 +158,7 @@ int main(void){
                 password[i].attempts = 0;
                 password[i].timeTaken = 0;
                 password[i].cracked = 0;
+                password[i].toolong = 0;
 
                 validPassword = 1;
 
@@ -190,20 +173,6 @@ int main(void){
             }
         }
         
-=======
-        for (int i = 0; i < size; i++){
-            printf("\nEnter password %d to crack: ", i + 1);
-            scanf("%s", password[i].pass);
-            password[i].attempts = 0;
-            password[i].timeTaken = 0;
-            password[i].cracked = 0;
-            //If a character is entered not in the BFM directory and the listalgorithm cannot crack it ask user to re-input password
-            if (strpbrk(password[i].pass, alphabet) != NULL){
-                printf("\nA character you entered is not allowed, please re-enter your password: ");
-                scanf("%s", password[i].pass);
-            }
-        }
->>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
 
         //CREATE THE LIST SEARCHED ALGORITHM
         FILE* file; //Set pointer to file
@@ -217,7 +186,7 @@ int main(void){
 
         start = clock(); //Set 'start' to the current program time
 
-        listAlgorithm(password, &crackedCounter, size, &listAttempts, end, start, file, &totalTime); //Call list algorithm function
+        listAlgorithm(password, &crackedCounter, size, &listAttempts, end, start, file, &totalTime, &totalAttempts); //Call list algorithm function
 
         fclose(file); //Closes file
 
@@ -228,46 +197,29 @@ int main(void){
                 printf("\n%s was unable to be cracked!", password[i].pass);
 
                 for (int j = 0; j < (sizeof(alphabet) - 1); j++){
-<<<<<<< HEAD
                     if (strlen(password[i].pass) > 8){ 
                         printf("\nSorry your password is too long for the brute force machine it would take a VERY long time to crack\n");
-                        toolong = 1; //Flag to tell the program the password is too long
+                        password[i].toolong = 1; //Flag to tell the program the password is too long
                         break;
                     }
                 }
-                if (!toolong){
+                if (password[i].toolong != 1){
                     bfContinue = 1; //Assign flag to uncracked passwords
                 }
-=======
-                    if (password[i].pass[9] == '\0' || password[i].pass[9] == alphabet[j]){ //If the 9th position is NULL or any possible character end exit both loops
-                        printf("\nSorry your password is too long for the brute force machine it would take a VERY long time to crack\n");
-                        toolong = 1; //Flag to tell the program the password is too long
-                        goto end; //Skip 'bfContinue' flag if it is bigger then 8 characters
-                    }
-                }
-
-                bfContinue = 1; //Assign flag to uncracked passwords
-
-                end:
-                    if (toolong){
-                        continue; //Skip password if it is too long
-                    }
->>>>>>> e1106516e98a4593d833a20ca7ac1d695b3c864e
             }
-
-            //Display if all passwords have been cracked
-            if (crackedCounter == size){
-                printf("\nAll the passwords were cracked, thank you for using the program!");
-            }
+        }
+        //Display if all passwords have been cracked
+        if (crackedCounter == size){
+            printf("\nAll the passwords were cracked, thank you for using the program!");
         }
         //BRUTE FORCE MACHINE ALGORITHM
         //For passwords that were uncracked start the brue force process
         if (bfContinue == 1){
-            printf("\nList Search Algorithm Failed... Entering Brute Force... This may take a while");
+            printf("\nList Search Algorithm Failed... Entering Brute Force... This may take a while\n");
 
             start = clock(); //Reassign the starting clock value to compute time taken for BFM passwords
 
-            bruteForce(password, size, alphabet, alphabetsize, end, start, &totalTime); //Call bruteForce function
+            bruteForce(password, size, alphabet, alphabetsize, end, start, &totalTime, &totalAttempts); //Call bruteForce function
 
         }
         //Print total time to the user if they enetered multiple passwords
@@ -277,8 +229,10 @@ int main(void){
                 printf("only an instant!\n");
             }
             else{
-            printf("%.2lf", totalTime);
+            printf("%.2lf seconds", totalTime);
             }
+            //Display to the user the total number of passwords check for each password
+            printf("\nThe total number of passwords checked was %lld\n", totalAttempts);
         }
         //Ask user to exit the program
         printf("\nWould you like to run the program again?\nYes 1):\nNo 2):\n");
