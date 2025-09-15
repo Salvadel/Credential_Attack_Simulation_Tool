@@ -1,12 +1,7 @@
 /* -----------------------------------------------
-Submitted By: Salvatore DeLuca
-Homework Number: Honors
 Credit to:
         <Salvatore DeLuca>
-Submitted On: 11/22/2024
-By submitting this program with my name,
-I affirm that the creation and modification
-of this program is primarily my own work.
+Iniitial Creation On: 11/22/2024
 ------------------------------------------------ */
 #include <stdio.h>
 #include <string.h>
@@ -178,7 +173,7 @@ int main(void){
         FILE* file; //Set pointer to file
 
         //Open file for reading, display error message if file fails to open
-        file = fopen("Common_Password_List.txt", "r");
+        file = fopen("dictionaries/rockyou.txt", "r");
         if (file == NULL){
             perror("\nThere was an error opening the file, please try again");
             return 1;
