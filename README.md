@@ -1,16 +1,47 @@
-The purpose of this program is to crack a set of passwords given by the user. The program achieves this by using two methods. The first method is a List sort algorithm. Which utalizes text files avaliable easily online containing real passwords that were leaked in data breaches. The list search algorithm involves the program reading the text file line by line and comparing each password in the file to the password input by the user. This is highly effective as passwords on the list are often commonly used weak passwords that many users use. If all passwords are guessed using the list search algorithm the program ends, but what happens when the user enters a password that is not on the leaked password list? Well whenever that instance happens the program will continue to run and start its second method to crack the password, a brute force machine. A BFM takes an input of the alphabet, numbers, and some special characters, then generates every single possible combination of them until it cracks the passwords that were unable to be cracked by the list seach alogirthm. This program tells the user how many seconds it took to crack all of the password and how many attempts in total, to show the user just how fast weak passwords can be cracked. 
+<h1>Credential Attack Simulation Tool</h1>
 
-    More specifics of program:
+<h2>Description</h2>
+This project consists of a C program that attempts to crack up to 100 user-provided passwords (max 20 chars) using two methods. First, it checks each password against a leaked wordlist (rockyou.txt). If not found, a brute-force engine generates combinations (limited to 8 chars) from letters, numbers, and symbols. It reports total attempts and elapsed time (shows "instantly" if <0.01s) and offers to run again.
+<br> </br>
+Note that the program must be downloaded using Git Large File Storage (LFS). Alternatively, you can download it from the GitHub web app and replace the 'src/directories/rockyou.txt' file with a locally downloaded version (https://weakpass.com/wordlists/rockyou.txt).
+<br />
 
-        Leaked password file used is called "rockyou.txt" avaliable at https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt 
+<h2>Languages and Utilities Used</h2>
 
-        Program utalizes: arrays, file operations, functions, structures, loops, conditional statements, time operations, pointers, arrow opperators.
+- <b>C</b>
+- <b>rockyou.txt (password list)</b> 
 
-        Maximum length for passwords is 20 characters, and you can input up to 100 passwords
+<h2>Environments Used </h2>
 
-        If password takes less the 0.01 secnds to crack the program will display "instantly" for time
+- <b>Windows 11</b>
 
-        Any password past 5 characters takes VERY long to crack so the longest avaliable password the BFC can calculate is 8 characters unless the list algoithm can crack the password
+<h2>Program walk-through:</h2>
 
-        At the end of the program the program will ask the user if it would like to run the program again
+<p align="center">
+Launch the utility.exe, enter how many passwords to crack: <br/>
+<img src="https://i.imgur.com/WWoWpL8.jpeg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<br />
+<br />
+Enter the passwords you want to test:  <br/>
+<img src="https://i.imgur.com/Wh1LTc6.jpeg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<br />
+<br />
+View results:  <br/>
+<img src="https://i.imgur.com/uIfYqxV.jpeg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<br />
+<br />
+Indication if you would like to restart the program:  <br/>
+<img src="https://i.imgur.com/tFm73MM.jpeg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<br />
+<br />
 
+
+<!--
+ ```diff
+- text in red
++ text in green
+! text in orange
+# text in gray
+@@ text in purple (and bold)@@
+```
+--!>
